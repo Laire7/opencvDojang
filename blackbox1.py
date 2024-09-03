@@ -19,7 +19,7 @@ import os
 
 # basic_path = 'C:/Users/SBA/opencvDojang/'
 # basic_path = 'C:/Users/syoun/opencvDojang/'
-max_Usage = 3 * 1000
+max_Usage = 1024 * 3 
 
 def get_ls(path):
     return list(os.listdir(path))
