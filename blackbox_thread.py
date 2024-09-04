@@ -18,6 +18,7 @@
 
 import cv2, os, time
 import threading, multiprocessing
+import numpy as np
 from datetime import datetime
 
 ###글로벌 변수
@@ -33,24 +34,33 @@ folderSize = 0 #새로운 폴더를 생성 할때마다 폴더 사이즈를 업�
 
 ###스레드 설정
 #비디오 녹화 시간 설정
-def video_thread(time_stopVideo):
+def video_thread(time_stopVideo, running):
     for _ in range(video_duration):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            break
         if not running:  # running이 False이면 바로 종료
             break
         time.sleep(1)
     time_stopVideo.set()  # 이벤트 설정 (녹화 중지)
 
 #폴더 생성 시간 설정
-def newfolder_thread(time_createFolder): 
+def newfolder_thread(time_createFolder, running): 
     for _ in range(folder_duration):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            break
         if not running:
             break
         time.sleep(1)
     time_createFolder.set()
 
 #폴더 용량 확인하기    
-def storageCheck_thread(time_checkStorage):
+def storageCheck_thread(time_checkStorage, running):
     for _ in range(storageCheck_duration):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            break
         if not running:
             break
         time.sleep(1)
@@ -70,7 +80,7 @@ def createFolder(now):
         
 #날짜+현재시간으로 폴더 이름 짓기
 def currDateTime_toStr(now, fileType):
-    global basic_path #기존 경로 불러오기
+    # global basic_path #기존 경로 불러오기
     now_toStr = ''
     #날짜+현재시간을 문자열로 설정해서
     if fileType=="folder":
@@ -81,21 +91,24 @@ def currDateTime_toStr(now, fileType):
     return basic_path + now_toStr
            
 #새로운 폴더 언제 생성할지 설정하기
-def folderFunc(now):
+def folderFunc(now, running):
     createFolder(now)
     while(running):
         ##스레드 설정
         #폴더 스레드 중지 
         time_createFolder = threading.Event() # 폴더 생성 중지 이벤트 생성  
         #폴더 생성 스레드 생성 및 시작
-        folderTimer= threading.Thread(target=newfolder_thread, args=(time_createFolder,))
+        folderTimer= threading.Thread(target=newfolder_thread, args=(time_createFolder,running))
         folderTimer.start() 
         #폴더 이벤트 확인 (5초 경과)
         if time_createFolder.is_set():
             now = datetime.now()
-            createFolder(now)
+            running = createFolder(now)
             global folderSize
             folderSize += str(os.path.join(basic_path, currDateTime_toStr(now,"folder"))).st_size #폴더 생성하자 마자 폴더 용량 업데이트 하기
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            break
 
 ##비디오 만들기 함수들
 #비디오 생성하기
@@ -104,7 +117,7 @@ def createVideo(now):
     #녹화 중지 이벤트 생성
     time_stopVideo = threading.Event()
     #타이머 스레드 생성 및 시작
-    startRecording = threading.Thread(target=video_thread, args=(time_stopVideo,))
+    startRecording = threading.Thread(target=video_thread, args=(time_stopVideo, running))
     startRecording.start()
 
     ##녹화 설정
@@ -123,7 +136,7 @@ def createVideo(now):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frameSize = (width,height)
     #출력 파일 설정
-    out_color = cv2.VideoWriter(videoName + 'avi', fourcc, fps, frameSize)
+    out_color = cv2.VideoWriter(videoName + '.avi', fourcc, fps, frameSize)
     out_gray = cv2.VideoWriter(videoName + '_gray.avi', fourcc, fps, frameSize, isColor=False) 
     #녹화 시작
     recording = True
@@ -151,36 +164,12 @@ def createVideo(now):
     cv2.destroyAllWindows() #미리보기 창 닫기
     
 ##폴더 용량 조정하는 함수들
-#폴더 용량 사이즈 언제 확인할지 설정하기
-def checkStorageFunc(queue):
-    #폴더 사이즈 측정하기 시작
-    global running, folderSize
-    while(running):
-        ##스레드 설정
-        #폴더 스레드 중지 
-        time_checkStorage = threading.Event() # 폴더 생성 중지 이벤트 생성  
-        #폴더 생성 스레드 생성 및 시작
-        startCheckStorage= threading.Thread(target=newfolder_thread, args=(time_checkStorage,))
-        startCheckStorage.start() 
-        
-        if folderSize > max_storage: #새로운 폴더가 생성하자 마자 용량이 업데이트 되어, 용량 초과를 넘으면 바로 지우기까지 연계
-            deleteFiles()
-            print(f'<용량 업데이트>현재 폴더 용량은: {folderSize}')      
-        #타이머 이벤트 확인 (1분 경과 여부)
-        if time_checkStorage.is_set():
-            folderSize = check_folderSize()
-            print(f'<용량 점검>현재 폴더 용량은: {folderSize}')      
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            recording = False
-            break
-    queue.put(running)
-
 #폴더 사이즈를 유지하기 위해 폴더를 처음 만든 순서대로 지우기
-def deleteFiles():
+def deleteFiles(running):
     sorted_folder_list = sorted(basic_path, key=lambda x: tuple(map(int, x.split('_')))) # sortFolder by dateCreated (as specified in folder name)
     print(f'폴더 정렬: {sorted_folder_list}')
     del_i = 0 # 파일을 만드는 순서대로 지우기
-    global running, folderSize
+    global folderSize
     while (folderSize>max_storage) and running and (del_i<len(sorted_folder_list)):
         # removedFile = str(os.remove(basic_path + sorted_folder_list[del_i]))
         # folderSize -= fileStats.st_size #폴더를 지우자 마자 폴더 용량 업데이트 하기
@@ -189,9 +178,11 @@ def deleteFiles():
             running = False
             break
         del_i += 1
+    print(f'<용량 업데이트>현재 폴더 용량은: {folderSize}')     
+    return running
         
 #폴더 용량 측정하기
-def check_folderSize():
+def check_folderSize(running):
     global folderSize
     try:
         #폴더 내 모든 파일과 하위 폴더를 순회
@@ -200,18 +191,19 @@ def check_folderSize():
                 f_p = os.path.join(dirpath, f)
                 #os.path.islink() 함수를 사용하여 심볼릭 링크는 크기에 포함하지 않도록 함
                 if not os.path.islink(f_p):
-                    folderSize += os.path.getsize(f_p)
+                    folderSize += int(round(os.path.getsize(f_p)/ (1024*1024))) #폴더 용량을 byte 단위에서 -> megabyte (mb)로 변경
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     recording = False
                 break
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                recording = False
+                running = False
                 break
                         
     except FileNotFoundError:
         print(f"<오류> 폴더를 찾을 수 없습니다: {basic_path}")
         return 0
-    return int( folderSize / (1024 * 1024)) #폴더 용량을 byte 단위에서 -> megabyte (mb)로 변경
+    return running 
+
     # # 바이트 크기를 KB, MB, GB 단위로 변환 (선택 사항)
     # if folder_size_bytes > 0:
     #     folder_size_kb = folder_size_bytes / 1024
@@ -220,13 +212,37 @@ def check_folderSize():
 
 ###메인 프로그램 함수            
 #블랙박스 프로그램 설정            
-def createBlackbox(queue):
-    global running
+def createBlackbox(running, queue):
+    #현재 시간 측정
+    now = datetime.now()
+    print(f'블랙박스 프로그램이 {now} 에 시작되었습니다')
     while(running):
-        #현재 시간 측정
-        now = datetime.now()
-        print(f'블랙박스 프로그램이 {now}에 시작되었습니다')
-        folderFunc(now)
+        folderFunc(now, running)
+        now = datetime.now()  #현재 시간 업데이트
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            break
+
+    queue.put(running)
+
+#폴더 용량 사이즈 언제 확인할지 설정하기
+def checkStorageFunc(running, queue):
+    #폴더 사이즈 측정하기 시작
+    global folderSize
+    while(running):
+        ##스레드 설정
+        #폴더 스레드 중지 
+        time_checkStorage = threading.Event() # 폴더 생성 중지 이벤트 생성  
+        #폴더 생성 스레드 생성 및 시작
+        startCheckStorage=threading.Thread(target=newfolder_thread, args=(time_checkStorage, running))
+        startCheckStorage.start() 
+        
+        if folderSize > max_storage: #새로운 폴더가 생성하자 마자 용량이 업데이트 되어, 용량 초과를 넘으면 바로 지우기까지 연계
+            running = deleteFiles(running)
+ 
+        #타이머 이벤트 확인 (1분 경과 여부)
+        if time_checkStorage.is_set():
+            running = check_folderSize(running)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
             break
@@ -234,22 +250,26 @@ def createBlackbox(queue):
         
 ###메인 프로그램 실행
 if __name__ == "__main__":
-    while(running):
-        # 멀티프로세싱 큐 생성
-        queue = multiprocessing.Queue()
-        # 첫 번째 프로세스 생성 및 시작
-        p1 = multiprocessing.Process(target=createBlackbox, args=(queue,))
-        p1.start()
+    running = True #프로그램 종료 변수 일단 True로 할당하기
+    
+    # 멀티프로세싱 큐 생성
+    queue = multiprocessing.Queue()
+    # 첫 번째 프로세스 생성 및 시작
+    p1 = multiprocessing.Process(target=createBlackbox, args=(running, queue))
+    p1.start()
 
-        # 두 번째 프로세스 생성 및 시작
-        p2 = multiprocessing.Process(target=checkStorageFunc, args=(queue,))
-        p2.start()
+    # 두 번째 프로세스 생성 및 시작
+    p2 = multiprocessing.Process(target=checkStorageFunc, args=(running, queue))
+    p2.start()
+    
+    while(running):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
-            # 프로세스가 완료될 때까지 대기
-            p1.join()
-            p2.join()
             break
+        # 프로세스가 완료될 때까지 대기
+        p1.join()
+        p2.join()
+        running = queue.get() and queue.get()
     print(f'블랙박스 프로그램이 종료되었습니다. 프로그램을 이용해 주셔서 감사합니다.')
     
 ######화요일에 마친?? 코드###################################################################################################################################################################################################
