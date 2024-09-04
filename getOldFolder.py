@@ -15,9 +15,13 @@ os.makedirs(basePath, exist_ok=True)
 now = datetime.now()
 #폴더명을 "20240904_11"
 #folderName = now.strftime("%Y%m%d_%H")
+folder_list = []
 for hour in range(24):
     folderName = now.strftime("%Y%m%d_")
     folderName = folderName + str(hour)
     folderName = os.path.join(basePath, folderName)
     #print(folderName)
     os.makedirs(folderName, exist_ok=True)
+    if folderName in os.listdir():
+        folder_list.
+        folder_list.append(folderName)
