@@ -32,36 +32,46 @@ storageCheck_duration = 10 #폴더 용량 몇 초마다 확인 할지 지정
 max_storage = 270 #최대 폴더 용량 지정하기(MB)
 folderSize = 0 #새로운 폴더를 생성 할때마다 폴더 사이즈를 업데이트 하기 위해 글로버 변수로 지정
 
+#프로그램 종료를 전달 할 수 있는 변수, lock 객체 생성 
+running_duringThread = True
+lock = threading.Lock() 
+
 ###스레드 설정
 #비디오 녹화 시간 설정
 def video_thread(time_stopVideo, running):
+    global running_duringThread
     for _ in range(video_duration):
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            running = False
+            running_duringThread = False
+            # running = False
             break
-        if not running:  # running이 False이면 바로 종료
+        if not (running and running_duringThread):  # running이 False이면 바로 종료
             break
         time.sleep(1)
     time_stopVideo.set()  # 이벤트 설정 (녹화 중지)
 
 #폴더 생성 시간 설정
 def newfolder_thread(time_createFolder, running): 
+    global running_duringThread
     for _ in range(folder_duration):
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            running = False
+            running_duringThread = False
+            # running = False
             break
-        if not running:
+        if not (running and running_duringThread):
             break
         time.sleep(1)
     time_createFolder.set()
 
 #폴더 용량 확인하기    
 def storageCheck_thread(time_checkStorage, running):
+    global running_duringThread
     for _ in range(storageCheck_duration):
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            running = False
+            running_duringThread = False
+            # running = False
             break
-        if not running:
+        if not (running and running_duringThread):
             break
         time.sleep(1)
     time_checkStorage.set()
@@ -69,14 +79,15 @@ def storageCheck_thread(time_checkStorage, running):
 ###함수 목록    
 ##폴더 만들기 함수들
 #새로운 폴더 만들기         
-def createFolder(now):
+def createFolder(now, running):
     #새 폴더 경로 지정하기
     new_path = currDateTime_toStr(now, "folder")
     print(new_path)
     if not os.path.exists(new_path): # 동일한 폴더가 있는지 확인 
         os.mkdir(new_path) #지정한 경로에 새로운 폴더 추가
         os.chdir(new_path) #지정 한 경로 안으로 들어가기
-        createVideo(now)
+        running = createVideo(now, running)
+    return running
         
 #날짜+현재시간으로 폴더 이름 짓기
 def currDateTime_toStr(now, fileType):
@@ -92,8 +103,8 @@ def currDateTime_toStr(now, fileType):
            
 #새로운 폴더 언제 생성할지 설정하기
 def folderFunc(now, running):
-    createFolder(now)
-    while(running):
+    running = createFolder(now, running)
+    while(running and running_duringThread):
         ##스레드 설정
         #폴더 스레드 중지 
         time_createFolder = threading.Event() # 폴더 생성 중지 이벤트 생성  
@@ -102,17 +113,19 @@ def folderFunc(now, running):
         folderTimer.start() 
         #폴더 이벤트 확인 (5초 경과)
         if time_createFolder.is_set():
+            folderTimer.join()
             now = datetime.now()
-            running = createFolder(now)
+            running = createFolder(now, running)
             global folderSize
             folderSize += str(os.path.join(basic_path, currDateTime_toStr(now,"folder"))).st_size #폴더 생성하자 마자 폴더 용량 업데이트 하기
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
             break
+    return (running and running_duringThread)
 
 ##비디오 만들기 함수들
 #비디오 생성하기
-def createVideo(now):
+def createVideo(now, running):
     ##스레드 설정
     #녹화 중지 이벤트 생성
     time_stopVideo = threading.Event()
@@ -140,7 +153,7 @@ def createVideo(now):
     out_gray = cv2.VideoWriter(videoName + '_gray.avi', fourcc, fps, frameSize, isColor=False) 
     #녹화 시작
     recording = True
-    while recording:
+    while recording and running and running_duringThread:
         ret, frame = cap.read()  #프레임 읽기
         if ret:
             #프레임 저장
@@ -153,15 +166,18 @@ def createVideo(now):
             # 'q' 키를 누르면 즉시 종료
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 recording = False
+                running = False
                 break
         #타이머 이벤트 확인 (1분 경과 여부)
         if time_stopVideo.is_set():
+            startRecording.join()
             recording = False        
     #비디오 녹화 출력하기
     cap.release()
     out_color.release()
     out_gray.release()
     cv2.destroyAllWindows() #미리보기 창 닫기
+    return (running and running_duringThread)
     
 ##폴더 용량 조정하는 함수들
 #폴더 사이즈를 유지하기 위해 폴더를 처음 만든 순서대로 지우기
@@ -217,7 +233,7 @@ def createBlackbox(running, queue):
     now = datetime.now()
     print(f'블랙박스 프로그램이 {now} 에 시작되었습니다')
     while(running):
-        folderFunc(now, running)
+        running = folderFunc(now, running)
         now = datetime.now()  #현재 시간 업데이트
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
@@ -229,7 +245,7 @@ def createBlackbox(running, queue):
 def checkStorageFunc(running, queue):
     #폴더 사이즈 측정하기 시작
     global folderSize
-    while(running):
+    while(running and running_duringThread):
         ##스레드 설정
         #폴더 스레드 중지 
         time_checkStorage = threading.Event() # 폴더 생성 중지 이벤트 생성  
@@ -242,6 +258,8 @@ def checkStorageFunc(running, queue):
  
         #타이머 이벤트 확인 (1분 경과 여부)
         if time_checkStorage.is_set():
+            startCheckStorage.join()
+            running = running and running_duringThread
             running = check_folderSize(running)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
