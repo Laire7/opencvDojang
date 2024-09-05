@@ -1,6 +1,6 @@
 # 파일에서 이미지를 읽어서 출력
 
-import cv2
+import cv2, sys
 
 fileName = 'cat.jpg'
 
