@@ -26,7 +26,7 @@ img = np.full((400, 400, 3), 255, np.uint8)
 # cv2.rectangle(img, pt1, pt4, lineColor, thick)
 # # x, y, w, h
 # cv2.rectangle(img, (50, 100, 100, 100), lineColor2, thick, lineType)
-
+#cv2.circle(image, center_coordinates, radius, color, thickness, lineType)
 cv2.circle(img, (int(img.shape[0]/2), int(img.shape[1]/2)), 100, (0,255,0),2,cv2.LINE_AA)
 
 #text
