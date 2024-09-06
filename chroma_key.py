@@ -15,7 +15,6 @@ def on_trackbar(pos):
     hmax = cv2.getTrackbarPos('H_max', 'frame')
     smin = cv2.getTrackbarPos('S_min', 'frame')
 
-
 # 동영상 파일명
 fileName1 = "data2/woman.mp4"
 fileName2 = "data2/raining.mp4"
