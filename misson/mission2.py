@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+# 어둡게 하는 필터 만들기
 def darken_image(img, darken_factor=0.5):
     """Darkens an image while preserving sharpness.
 
@@ -13,29 +14,30 @@ def darken_image(img, darken_factor=0.5):
     """
 
 
-    # Convert to HSV
+    # BGR-> HSV (밝기 조정을 위해)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    # Darken the value channel
-    v = hsv[:, :, 2]
-    v = np.clip(v * (1 - darken_factor), 0, 255).astype(np.uint8)
-    hsv[:, :, 2] = v
+    # np.clip 함수 적용
+    v = hsv[:, :, 2] #밝기를 지정한 값들만 불러오기
+    v = np.clip(v * (1 - darken_factor), 0, 255).astype(np.uint8) 
+    #np는 int8만 적용해서, 기존 이미지 값을 int8으로 바꿈
+    hsv[:, :, 2] = v  #기존 이미지에 적용
 
-    # Convert back to BGR
+    # HSV -> BGR (화면 출력을 위해)
     darkened_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
     return darkened_img
 
-# Load the image
+# 이미지 불러오기
 image = cv2.imread("misson/03.png")
 
-# Darken the image
-darkened_image = darken_image(image, darken_factor=0.3)  # Adjust darken_factor as needed
+# 어둡게 하는 함수 불러오기
+darkened_image = darken_image(image, darken_factor=0.3)  # 0<darken_factor<1 1에 가까울 수록 더 어둡게 
 
-# Display the results
+# 이미지 출력
 cv2.imshow("Original Image", image)
 cv2.imshow("Darkened Image", darkened_image)
-cv2.waitKey(0)
+cv2.waitKey()
 cv2.destroyAllWindows()
 
 # # 1 ============================================================================
