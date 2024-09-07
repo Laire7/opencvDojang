@@ -25,7 +25,6 @@ def pencil_sketch(img):
     dst = cv2.divide(gray, blr, scale=255)
     return dst
 
-
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 if not cap.isOpened():

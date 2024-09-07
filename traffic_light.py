@@ -57,3 +57,6 @@ image_path = "data2/green.jpg"
 # 신호등 색상 감지 및 출력
 color = detect_traffic_light_color(image_path)
 print(f"신호등 색상: {color}")
+cv2.imshow('dst',dst) 
+cv2.waitKey()
+cv2.destroyAllWindows()

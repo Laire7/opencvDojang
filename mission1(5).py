@@ -5,7 +5,7 @@ import cv2, sys
 # png파일을 읽을때는 cv2.IMREAD_UNCHANGED 적용필요!!
 # src = cv2.imread('misson/01.png', cv2.IMREAD_UNCHANGED)
 dst = cv2.imread('misson/01.png', cv2.IMREAD_UNCHANGED)
-dst = cv2.imread(dst, cv2.IMREAD_COLOR)
+# dst = cv2.imread(dst, cv2.IMREAD_COLOR)
 
 # 파일이 정상적으로 읽히지 않았다면
 if dst is None:
