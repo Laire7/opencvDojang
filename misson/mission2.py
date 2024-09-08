@@ -18,9 +18,12 @@ def darken_image(img, darken_factor=0.5):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # np.clip 함수 적용
-    v = hsv[:, :, 2] #밝기를 지정한 값들만 불러오기
+    v = hsv[:, :, 2] #밝기를 지정하는 값들만 불러오기
     v = np.clip(v * (1 - darken_factor), 0, 255).astype(np.uint8) 
-    #np는 int8만 적용해서, 기존 이미지 값을 int8으로 바꿈
+    # v 는 이미지의 각 픽셀에 저장 된 밝기 값
+    # (1-darken_factor) 1보다 작은 숫자를 곱해 밝기를 줄인다 (0에 가까울 수록 이미지는 어두워진다)
+    # 0, 255 는 계산 한 값의 최소값과 최대값을 정이합니다 (계산 한 값이 0보다 작으면 0으로, 255보다 크면 255로 지정한다)
+    #.astype(np.uint8) 계산 한 값을 부호 없는 int8bit으로 바꿈 (이미지 데이터 표준화)
     hsv[:, :, 2] = v  #기존 이미지에 적용
 
     # HSV -> BGR (화면 출력을 위해)
