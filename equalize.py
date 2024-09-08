@@ -1,6 +1,6 @@
 import cv2, sys
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 #cartoon filter
 

@@ -14,6 +14,7 @@ if dst is None or logo is None:
 # logo에서 알파채널만 가져오기
 # 3번째는 하나 밖에 없어 출력 안 됨
 mask = logo[:,:,3]
+print(mask)
 
 # logo에서 BGR채널 가져오기
 # 모든 행, 모든 열, 0-2번 채널
