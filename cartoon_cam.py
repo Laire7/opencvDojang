@@ -31,7 +31,7 @@ if not cap.isOpened():
     print('video open failed!')
     sys.exit()
 
-cam_mode = 0
+cam_mode = 1
 
 while True:
     ret, frame = cap.read()
