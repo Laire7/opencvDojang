@@ -22,16 +22,20 @@ def cartoon_filter(img):
 def pencil_sketch(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blr = cv2.GaussianBlur(gray, (0, 0), 3)
-    dst = cv2.divide(gray, blr, scale=255)
-    return dst
+    # dst = cv2.divide(blr, gray, scale=255)
+    return blr
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+# cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+fileName = 'data/vtest.avi'
+# VideoCapture 클래스 객체 생성 + 생성자가 호출 (파일열기)
+cap = cv2.VideoCapture(fileName)
 
 if not cap.isOpened():
     print('video open failed!')
     sys.exit()
 
-cam_mode = 1
+cam_mode = 2
 
 while True:
     ret, frame = cap.read()
