@@ -41,17 +41,18 @@ def getImgList():
 
 ### 이미지 파일 디렉토리 재정의 ###
 def getDataDir(orgPath, transformList):
+    dataDirList = []
     dataPath = os.path.join(os.getcwd(), 'DataAug')
     obj = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split("_", 1)[0]
     dataPath = os.path.join(dataPath, obj)
     fileName = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split(".", 1)[0]
     for trans in transformList: 
-        dataPath += "_" + trans
-        delPrevData(dataPath, trans)
-        if(trans == "rotate"):
-            step = 30
-            genMultiple(dataPath, "angle", step=30)
-    return dataPath  
+            dataPath += "_" + trans
+            # delPrevData(dataPath, trans)
+            if(trans == "rotate"):
+                step = 30
+                genMultiple(dataPath, "angle", step=30)
+    return dataDirList  
 
 ### 이미지 변환 함수 목록 ###
 def resize224(img): # 이미지를 ML 프로그램이 요구하는 사이즈에 맞춘다
@@ -106,8 +107,7 @@ def genMultiple(dataPath, trans, step):
         stopLoop = 360
         loopStep = 30   
     for loop in range(0, stopLoop, loopStep):        
-        dataLoop = 
-        cv2.imwrite(dataDir + ".jpg", img_trans)
+        dataLoop.append(dataPath+str(loop)+".jpg")
     return dataLoop
 # def createData(orgImgPath, transList):
 #     if transformFx == "rotate":
