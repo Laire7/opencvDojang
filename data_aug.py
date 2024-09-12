@@ -47,10 +47,10 @@ def getDataDir(orgPath, transformList):
     fileName = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split(".", 1)[0]
     for trans in transformList: 
         dataPath += "_" + trans
-        delPrevData()
+        delPrevData(dataPath, trans)
         if(trans == "rotate"):
             step = 30
-            genMultiple("angle", step=30)
+            genMultiple(dataPath, "angle", step=30)
     return dataPath  
 
 ### 이미지 변환 함수 목록 ###
@@ -100,16 +100,25 @@ def rotateData(angle):
 # def delPrevData():
 
 ### 이미지 생성 함수 ###
-def createData(orgImgPath, transList):
-    if transformFx == "rotate":
+def genMultiple(dataPath, trans, step):
+    dataLoop = []
+    if trans == "rotate":
         stopLoop = 360
-        loopStep = 30
-    else:
-        stopLoop = 1
-        loopStep = 1
+        loopStep = 30   
+    for loop in range(0, stopLoop, loopStep):        
+        dataLoop = 
+        cv2.imwrite(dataDir + ".jpg", img_trans)
+    return dataLoop
+# def createData(orgImgPath, transList):
+#     if transformFx == "rotate":
+#         stopLoop = 360
+#         loopStep = 30
+#     else:
+#         stopLoop = 1
+#         loopStep = 1
     
-    for trans in transList:
-        for loop in range(0, stopLoop, loopStep):        
+#     for trans in transList:
+#         for loop in range(0, stopLoop, loopStep):        
             # dataDir = getDataDir(imgDirs[0], [applyTrans])
             # cv2.imwrite(dataDir + ".jpg", img_trans)
     # match transformFx:
