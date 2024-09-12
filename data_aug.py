@@ -45,7 +45,12 @@ def getDataDir(orgPath, transformList):
     obj = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split("_", 1)[0]
     dataPath = os.path.join(dataPath, obj)
     fileName = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split(".", 1)[0]
-    for trans in transformList: dataPath += "_" + trans
+    for trans in transformList: 
+        dataPath += "_" + trans
+        delPrevData()
+        if(trans == "rotate"):
+            step = 30
+            genMultiple("angle", step=30)
     return dataPath  
 
 ### 이미지 변환 함수 목록 ###
