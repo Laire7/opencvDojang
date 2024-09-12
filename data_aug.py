@@ -82,22 +82,80 @@ def crop(img):
     img_crop = img[int(round(h/4)):int(round(3*h/4)), int(round(w/4)):int(round(3 * w/4))]
     return img_crop
 
+### 이미지 생성 함수 목록 ###
+def rotateData(angle):
+    for loop in range(0, 360, angle=30):
+        # img_trans = chooseTransform(org, applyTrans)
+        # img_trans = rotate(org)`
+        # cv2.imshow("rotate", img_trans)
+        # dataDir = getDataDir(imgDirs[0], [applyTrans])
+        # cv2.imwrite(dataDir + ".jpg", img_trans)
+    
+### 예전에 만들었던 행당 변환 이미지 지우기 ###
+# def delPrevData():
+
+### 이미지 생성 함수 ###
+def createData(orgImgPath, transList):
+    if transformFx == "rotate":
+        stopLoop = 360
+        loopStep = 30
+    else:
+        stopLoop = 1
+        loopStep = 1
+    
+    for trans in transList:
+        for loop in range(0, stopLoop, loopStep):        
+            # dataDir = getDataDir(imgDirs[0], [applyTrans])
+            # cv2.imwrite(dataDir + ".jpg", img_trans)
+    # match transformFx:
+    #     case "rotate":
+    #        rotate(img)
+    #     case "hflip":
+    #         hflip(img)
+    #     case "vflip":
+    #         vflip(img)
+    #     case "resize":
+    #         resize(img)
+    #     case "crop":
+    #         crop(img)
+    #     case _ :
+    #         print(f'Returning original')
+    #         return img
+
 ### 이미지 변환 고르고 기록하기 ###
 def chooseTransform(img, transformFx): 
     match transformFx:
         case "rotate":
            rotate(img)
         case "hflip":
-            return hflip(img)
+            hflip(img)
         case "vflip":
-            return vflip(img)
+            vflip(img)
         case "resize":
-            return resize(img)
+            resize(img)
         case "crop":
-            return crop(img)
+            crop(img)
         case _ :
             print(f'Returning original')
             return img
+
+### 이미지 파일 생성 ###
+def createData(img, transformFx):
+    match transformFx:
+        case "rotate":
+           rotateData(img)
+        case "hflip":
+            hflip(img)
+        case "vflip":
+            vflip(img)
+        case "resize":
+            resize(img)
+        case "crop":
+            crop(img)
+        case _ :
+            print(f'Returning original')
+            return img
+
         
 # ### 이미지 변환 목록 함수 테스팅 ###
 # def listTransform(img, transformFx): 
@@ -129,11 +187,5 @@ org = cv2.imread(imgDirs[0])
 
 # 이미지 파일 생성 잘 되는지 확인
 applyTrans = "rotate"
-img_trans = chooseTransform(org, applyTrans)
-img_trans = rotate(org)
-cv2.imshow("rotate", img_trans)
-dataDir = getDataDir(imgDirs[0], [applyTrans])
-cv2.imwrite(dataDir + ".jpg", img_trans)
-cv2.imshow('rotate', img_trans)
-cv2.waitKey()
-cv2.destroyAllWindows()
+
+
