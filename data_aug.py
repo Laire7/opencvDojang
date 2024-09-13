@@ -40,18 +40,22 @@ def getImgList():
     return fileDirs
 
 ### 이미지 파일 디렉토리 재정의 ###
-def getDataDir(orgPath, transformList):
+def genDataDir(orgPath, transformList):
     dataDirList = []
     dataPath = os.path.join(os.getcwd(), 'DataAug')
     obj = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split("_", 1)[0]
     dataPath = os.path.join(dataPath, obj)
     fileName = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split(".", 1)[0]
-    for trans in transformList: 
-            dataPath += "_" + trans
-            # delPrevData(dataPath, trans)
-            if(trans == "rotate"):
-                step = 30
-                genMultiple(dataPath, "angle", step=30)
+    for trans in transformList:
+        dataPath += "_" + trans
+        # delPrevData(dataPath, trans)
+        if(trans == "rotate"):
+            step = 30
+            dataLoop = genMultiple(dataPath, "angle", step=30)
+            ### NOT CONSIDERING ADDING ADDITIONAL TRANSFORMATIONS AFTER ROTATION (and there's multiple files to add additional files to) 
+            dataDirList.append(dataLoop)
+        else:
+            dataDirList.append(dataPath)
     return dataDirList  
 
 ### 이미지 변환 함수 목록 ###
@@ -89,8 +93,8 @@ def crop(img):
     return img_crop
 
 ### 이미지 생성 함수 목록 ###
-def rotateData(angle):
-    for loop in range(0, 360, angle=30):
+# def rotateData(angle):
+#     for loop in range(0, 360, angle=30):
         # img_trans = chooseTransform(org, applyTrans)
         # img_trans = rotate(org)`
         # cv2.imshow("rotate", img_trans)
@@ -106,8 +110,9 @@ def genMultiple(dataPath, trans, step):
     if trans == "rotate":
         stopLoop = 360
         loopStep = 30   
-    for loop in range(0, stopLoop, loopStep):        
-        dataLoop.append(dataPath+str(loop)+".jpg")
+    for loop in range(0, stopLoop, loopStep):
+        chooseTransform(img, "rotate")        
+        dataLoop.append(dataPath+str(loop)) 
     return dataLoop
 # def createData(orgImgPath, transList):
 #     if transformFx == "rotate":
@@ -154,22 +159,11 @@ def chooseTransform(img, transformFx):
             return img
 
 ### 이미지 파일 생성 ###
-def createData(img, transformFx):
-    match transformFx:
-        case "rotate":
-           rotateData(img)
-        case "hflip":
-            hflip(img)
-        case "vflip":
-            vflip(img)
-        case "resize":
-            resize(img)
-        case "crop":
-            crop(img)
-        case _ :
-            print(f'Returning original')
-            return img
-
+# def createData(img, dataDirList):
+#     for dataPath in dataDirList:    
+#         chooseTransform(img, rotate)    
+#         # img_trans = (str(dataPath), )
+#         cv2.imwrite(dataPath + ".jpg", img_trans)
         
 # ### 이미지 변환 목록 함수 테스팅 ###
 # def listTransform(img, transformFx): 
