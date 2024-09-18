@@ -1,4 +1,4 @@
-#!!!!!주의사항!!!!!
+#####!!!!!주의사항!!!!!
 ####2번째 스레드와 프로세스 동시에 이용하는 코드는 제대로 실행은 되지 않지만
 ####openCV 영상 개념들이 지금은 더 급한 것 같아
 ####금요일 설명부터 들을 생각입니다. 설명 제안해주셔서 감사합니다!
@@ -22,8 +22,8 @@ from datetime import datetime
 ###글로벌 변수
 running = True # 프로그램 종료 변수
 isWEBCAM = False #웹캠이 있는지 확인
-basic_path = 'C:/Users/SBA/opencvDojang/blackboxData/' # 폴더 저장소 지정
-# basic_path = 'C:/Users/syoun/opencvDojang/' #집에서 사용하는 폴더 저장 경로
+# basic_path = 'C:/Users/SBA/opencvDojang/blackboxData/' # 폴더 저장소 지정
+basic_path = 'C:/Users/syoun/opencvDojang/' #집에서 사용하는 폴더 저장 경로
 video_duration = 3 #비디오 몇 초까지 녹화 할지 지정
 folder_duration = 5 #폴더를 몇 초마다 생성할지 지정
 storageCheck_duration = 10 #폴더 용량 몇 초마다 확인 할지 지정

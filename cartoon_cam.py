@@ -10,10 +10,14 @@ def cartoon_filter(img):
     img2 = cv2.resize(img, (w//2, h//2))
 
     blr = cv2.bilateralFilter(img2, -1, 20, 7)
-    edge = 255 - cv2.Canny(img2, 80, 120)
-    edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
+    # edge = cv2.Canny(img2, 80, 120) # black with white borders
+    edge = 255 - cv2.Canny(img2, 80, 120) # white with black borders
+    # 80: pixel gradient lower than 80 is rejected
+    # 120: pixel gradient higher than 120 is made into an edge
+    # pixels between 80-120 is made into an edge only if it is connected to a pixel that is above 120
+    edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR) # 
 
-    dst = cv2.bitwise_and(blr, edge)
+    dst = cv2.bitwise_and(blr, edge) 
     dst = cv2.resize(dst, (w, h), interpolation=cv2.INTER_NEAREST)
 
     return dst
@@ -22,8 +26,8 @@ def cartoon_filter(img):
 def pencil_sketch(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blr = cv2.GaussianBlur(gray, (0, 0), 3)
-    # dst = cv2.divide(blr, gray, scale=255)
-    return blr
+    dst = cv2.divide(blr, gray, scale=255)
+    return dst
 
 # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
@@ -35,7 +39,7 @@ if not cap.isOpened():
     print('video open failed!')
     sys.exit()
 
-cam_mode = 2
+cam_mode = 1
 
 while True:
     ret, frame = cap.read()

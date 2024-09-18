@@ -4,7 +4,8 @@ import numpy as np
 import datetime, time
 
 # specify the path for the directory – make sure to surround it with quotation marks
-basic_path = 'C:/Users/SBA/opencvDojang/'
+# basic_path = 'C:/Users/SBA/opencvDojang/'
+basic_path = 'C:/Users/syoung/opencvDojang/'
 
 # fileName by date time
 def reformatDateTime2():

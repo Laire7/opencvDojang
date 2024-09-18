@@ -1,1 +1,1 @@
-    # cv2.imwrite(str(dataDirList[-1][0][0]), dataDirList[-1][0][1])
+edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
