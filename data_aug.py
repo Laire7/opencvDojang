@@ -35,6 +35,7 @@ from glob import glob
 ### 이미지들 불러오기 ###
 def getImgList():
     baseDir = os.getcwd() # 현재 작업 directory 확인
+    print("current directory:", os.getcwd())
     imgFoldr = os.path.join(baseDir,'org/') # 이미지들이 저장된 폴더로 directory 바꾸기
     fileDirs = glob(os.path.join(imgFoldr,'*.jpg')) # 폴더 안에 있는 모든 이미지들을 불러오기    
     return fileDirs
