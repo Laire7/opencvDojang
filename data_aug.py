@@ -1,4 +1,4 @@
-import cv2, sys, shutil
+import cv2, sys
 import numpy as np
 import os
 from glob import glob
@@ -35,47 +35,29 @@ from glob import glob
 ### 이미지들 불러오기 ###
 def getImgList():
     baseDir = os.getcwd() # 현재 작업 directory 확인
-    print("current directory:", os.getcwd())
-    imgFoldr = os.path.join(baseDir,'org/') # 이미지들이 저장된 폴더로 directory 바꾸기
+    imgFoldr = os.path.join(baseDir,'org/') # 이미지들이 저장된 폴더 확인하기
     fileDirs = glob(os.path.join(imgFoldr,'*.jpg')) # 폴더 안에 있는 모든 이미지들을 불러오기    
     return fileDirs
 
-### 이미지 파일 생성하기 ###
-def genData(orgPath, transformList, ext):
-    # 이미지 파일 생성할 변수
-    dataDirList = {}
-    basePath = os.getcwd()
-    # 이미지 파일 경로 지정하기
-    dataPath = os.path.join(os.getcwd(), 'DataAug') # 생성한 파일들 별도 폴더에다가 저장하기
-    obj = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split("_", 1)[0] # 분류 할 오브젝트 정의하고
-    dataPath = os.path.join(dataPath, obj) #분류 할 오브젝트 폴더에 따라 저장하기
-    # 폴더가 존재한다면
-    if os.path.isdir(dataPath):
-        shutil.rmtree(dataPath)
-    # os.mkdir(dataPath) # print(path, "폴더 만들기 성공!")
-    os.makedirs(dataPath,exist_ok=True)
-    os.chdir(dataPath) # go inside directory   
-    orgFileName = os.path.splitext(os.path.basename(orgPath))[0] # 원본 파일 (분류 할 오브젝트 + 배경을 정의한) 
-    dataPath = os.path.join(dataPath, orgFileName)
-    img = cv2.imread(orgPath)
-    dataDirList[-1] = [list((dataPath, img))] # 이미지 변환을 주기 전, 원본 불러오기 
-    for ord, trans in enumerate(transformList):
-        for prevTrans in dataDirList.get(ord-1): 
-            prevTrans[0] += "_" + trans
-            # delPrevData(dataPath, trans)
-            if(trans == "rotate"):
-                step = 30
-            else:
-                step = 1
-            dataLoop = genTransformData(prevTrans[1], prevTrans[0], "rotate", step)
-            dataDirList[ord] = dataLoop
-    #이미지 변환을 주고 난 후, 이미지들 뒤에 .jpg extension 붙이고 생성하기
-    for file in dataDirList.get(len(transformList)-1):
-        file[0] += ext
-        cv2.imwrite(str(file[0]), file[1])
-    os.chdir(basePath) # go back inside orgPath directory
-    # print(f'dataDirList:{dataDirList}')
-    # cv2.imwrite(str(dataDirList[-1][0][0]), dataDirList[-1][0][1])
+### 이미지 파일 디렉토리 재정의 ###
+def genDataDir(img, orgPath, transformList):
+    dataDirList = []
+    dataPath = os.path.join(os.getcwd(), 'DataAug')
+    obj = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split("_", 1)[0]
+    dataPath = os.path.join(dataPath, obj)
+    fileName = str(orgPath).split(os.path.join(os.getcwd(), 'org\\'))[1].split(".", 1)[0]
+    for trans in transformList:
+        dataPath += "_" + trans
+        # delPrevData(dataPath, trans)
+        if(trans == "rotate"):
+            step = 30
+            dataLoop = genMultiple(dataPath, "angle", step=30)
+            ### NOT CONSIDERING ADDING ADDITIONAL TRANSFORMATIONS AFTER ROTATION (and there's multiple files to add additional files to) 
+            dataDirList.append(dataLoop)
+        else:
+            dataDirList.append(dataPath)
+    return dataDirList  
+
 ### 이미지 변환 함수 목록 ###
 def resize224(img): # 이미지를 ML 프로그램이 요구하는 사이즈에 맞춘다
     img_resize224 = cv2.resize(img, (224,224))
@@ -83,6 +65,7 @@ def resize224(img): # 이미지를 ML 프로그램이 요구하는 사이즈에 
 
 def rotate(img, angle=30):
     h, w = img.shape[:2]
+    print(h, w)
     centerPt = (w/2, h/2)
     rotate_matrix = cv2.getRotationMatrix2D(centerPt, angle, 1)
     img_rotate = cv2.warpAffine(img, rotate_matrix, (w,h))
@@ -109,47 +92,108 @@ def crop(img):
     img_crop = img[int(round(h/4)):int(round(3*h/4)), int(round(w/4)):int(round(3 * w/4))]
     return img_crop
 
+### 이미지 생성 함수 목록 ###
+# def rotateData(angle):
+#     for loop in range(0, 360, angle=30):
+        # img_trans = chooseTransform(org, applyTrans)
+        # img_trans = rotate(org)`
+        # cv2.imshow("rotate", img_trans)
+        # dataDir = getDataDir(imgDirs[0], [applyTrans])
+        # cv2.imwrite(dataDir + ".jpg", img_trans)
+    
+### 예전에 만들었던 행당 변환 이미지 지우기 ###
+# def delPrevData():
+
 ### 이미지 생성 함수 ###
-def genTransformData(img, dataPath, trans, loopStep):
+def genMultiple(img, dataPath, trans, step):
     dataLoop = []
     if trans == "rotate":
-        stopLoop = 360  
-        if not loopStep:
-            loopStep = 20
-    else:
-        stopLoop = 1
-    for loop in range(loopStep, stopLoop, loopStep):
-        img = chooseTransform(img, trans)        
-        dataLoop.append(list((dataPath+str(loop), img))) 
+        stopLoop = 360
+        loopStep = 30   
+    for loop in range(0, stopLoop, loopStep):
+        chooseTransform(img, "rotate")        
+        dataLoop.append(dataPath+str(loop)) 
     return dataLoop
+# def createData(orgImgPath, transList):
+#     if transformFx == "rotate":
+#         stopLoop = 360
+#         loopStep = 30
+#     else:
+#         stopLoop = 1
+#         loopStep = 1
+    
+#     for trans in transList:
+#         for loop in range(0, stopLoop, loopStep):        
+            # dataDir = getDataDir(imgDirs[0], [applyTrans])
+            # cv2.imwrite(dataDir + ".jpg", img_trans)
+    # match transformFx:
+    #     case "rotate":
+    #        rotate(img)
+    #     case "hflip":
+    #         hflip(img)
+    #     case "vflip":
+    #         vflip(img)
+    #     case "resize":
+    #         resize(img)
+    #     case "crop":
+    #         crop(img)
+    #     case _ :
+    #         print(f'Returning original')
+    #         return img
 
 ### 이미지 변환 고르고 기록하기 ###
 def chooseTransform(img, transformFx): 
     match transformFx:
         case "rotate":
-            return rotate(img)
+           rotate(img)
         case "hflip":
-            return hflip(img)
+            hflip(img)
         case "vflip":
-            return vflip(img)
+            vflip(img)
         case "resize":
-            return resize(img)
+            resize(img)
         case "crop":
-            return crop(img)
+            crop(img)
         case _ :
             print(f'Returning original')
             return img
+
+### 이미지 파일 생성 ###
+# def createData(img, dataDirList):
+#     for dataPath in dataDirList:    
+#         chooseTransform(img, rotate)    
+#         # img_trans = (str(dataPath), )
+#         cv2.imwrite(dataPath + ".jpg", img_trans)
+        
+# ### 이미지 변환 목록 함수 테스팅 ###
+# def listTransform(img, transformFx): 
+#     match transformFx:
+#         case "rotate":
+#             return "rotate"
+#         case "hflip":
+#             return "hflip"
+#         case "vflip":
+#             return "vflip"
+#         case "resize":
+#             return "resize"
+#         case "crop":
+#             return "crop"
+#         case _ :
+#             return "-"
+        
+# def applyTransform(imgList, transformList):
+#     result = list(map(lambda src, transformStr: src + transformStr, imgList, transformList))
+#     # result = list(map(lambda src, transformStr: listTransform(img,transformStr), transformList))
+#     print(result)
              
 ####### 프로그램 실행 #######
 ## 원본 이미지 불러오기
 imgDirs = getImgList()
-
+print(imgDirs[0])
 ## 변환 적용한 함수들 저장하기
-for num, img in enumerate(imgDirs):
-    transformList = ["rotate", "hflip"]
-    genData(imgDirs[num], transformList, ".jpg")
-    
-# 이미지 파일 생성 잘 되는지 확인
+org = cv2.imread(imgDirs[0])
 
+# 이미지 파일 생성 잘 되는지 확인
+applyTrans = "rotate"
 
 

@@ -108,12 +108,7 @@ while True:
     elif key == 27: # ESC
         cv2.destroyAllWindows()
         sys.exit()
-    # left key
-    elif key == 0x250000:
-        
-    # right key
-    elif key== 0x270000:
-        os.
+
     cv2.setMouseCallback('img', mouse_callback, [img2]) # 마우스 행령을 입력
     cv2.imshow('img', disp)
 
